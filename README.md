@@ -31,12 +31,17 @@ chmod +x start.sh stop.sh restart.sh scripts/*.sh
 Install host prerequisites:
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y ffmpeg poppler-utils lsof python3-venv
+bash scripts/install-host-prereqs.sh
 ```
 
-The start script also expects Docker with NVIDIA GPU container support, which is
-included on the DGX Spark software image used for this demo.
+The helper installs `git`, `curl`, `ffmpeg`, `ffprobe`, `pdftoppm`,
+`lsof`, Python/venv, and Node/npm. The start script also expects Docker with
+NVIDIA GPU container support, which is included on the DGX Spark software image
+used for this demo. On a clean Ubuntu host without Docker, run:
+
+```bash
+bash scripts/install-docker-nvidia-toolkit.sh
+```
 
 Install NemoClaw/OpenShell:
 
@@ -54,11 +59,7 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 Download the local Omni model:
 
 ```bash
-python3 -m venv "$HOME/.local/share/hf-download-venv"
-"$HOME/.local/share/hf-download-venv/bin/pip" install -U pip 'huggingface_hub[hf_xet]'
-"$HOME/.local/share/hf-download-venv/bin/hf" download \
-  nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 \
-  --local-dir "$HOME/models/nemotron-3-nano-omni-nvfp4"
+bash scripts/download-model.sh
 ```
 
 If Hugging Face asks for authentication, accept the model terms in your browser
@@ -66,7 +67,13 @@ and export a token before running the download:
 
 ```bash
 export HF_TOKEN="hf_..."
+bash scripts/download-model.sh
 ```
+
+The download helper creates its own Hugging Face CLI virtualenv at
+`$HOME/.local/share/hf-download-venv`, so a clean box does not need a global
+`hf` command installed first. Override the target location with `MODEL_DIR=...`
+if needed.
 
 Start only the local vLLM model server:
 
@@ -143,6 +150,24 @@ Restart the web app while keeping an already-running model server warm:
 ```bash
 STOP_MODEL=false ./stop.sh
 ./start.sh
+```
+
+## Script Summary
+
+The root scripts are the day-2 controls:
+
+```bash
+./start.sh       # start local vLLM, then start the web app
+./stop.sh        # stop the web app and vLLM
+./restart.sh     # stop, then start again
+```
+
+Useful variants:
+
+```bash
+START_WEB=false ./start.sh  # start only local vLLM
+STOP_MODEL=false ./stop.sh  # stop only the web app, keep vLLM warm
+PORT=8766 ./start.sh        # use a different web port
 ```
 
 ## Health Checks

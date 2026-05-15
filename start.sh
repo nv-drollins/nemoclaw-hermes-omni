@@ -55,7 +55,10 @@ start_vllm() {
 
     if [[ ! -f "$MODEL_DIR/config.json" ]]; then
         echo "Model directory is missing or incomplete: $MODEL_DIR" >&2
-        echo "Download it first:" >&2
+        echo "Download it first with the repo helper, which installs the hf CLI into a local venv:" >&2
+        echo "  export HF_TOKEN=\"hf_...\"   # if the model is gated" >&2
+        echo "  bash scripts/download-model.sh" >&2
+        echo "Or use your own hf CLI:" >&2
         echo "  hf download nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 --local-dir \"$MODEL_DIR\"" >&2
         exit 1
     fi
