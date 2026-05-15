@@ -8,6 +8,9 @@ SANDBOX="${SANDBOX:-my-hermes-local}"
 MODEL_ID="${MODEL_ID:-nvidia/nemotron-3-nano-omni-30b-a3b-reasoning}"
 NEMOCLAW_LOCAL_INFERENCE_TIMEOUT="${NEMOCLAW_LOCAL_INFERENCE_TIMEOUT:-600}"
 
+if [ -n "${NEMOCLAW_INSTALL_REF:-}" ]; then
+  echo "NEMOCLAW_INSTALL_REF=${NEMOCLAW_INSTALL_REF} is set; this script uses the currently installed nemoclaw CLI."
+fi
 bash "$ROOT/scripts/ensure-sudo.sh"
 
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"

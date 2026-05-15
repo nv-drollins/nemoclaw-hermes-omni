@@ -59,6 +59,24 @@ curl -fsSL https://www.nvidia.com/nemoclaw.sh | \
   bash -s -- --yes-i-accept-third-party-software
 ```
 
+### NemoClaw version pinning
+
+Leave `NEMOCLAW_INSTALL_REF` unset for the current NemoClaw installer. To compare against a previous known demo lane, prefix the install command:
+
+```bash
+curl -fsSL https://www.nvidia.com/nemoclaw.sh | \
+  NEMOCLAW_INSTALL_REF=v0.0.38 bash -s -- --yes-i-accept-third-party-software
+```
+
+Check what is installed before debugging a sandbox issue:
+
+```bash
+nemoclaw --version
+openshell --version
+nemoclaw my-hermes-local status
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+```
+
 Make sure the new CLIs are on your path:
 
 ```bash
