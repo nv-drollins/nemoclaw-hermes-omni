@@ -16,6 +16,7 @@ set -Eeuo pipefail
 #   NVIDIA_CONTAINER_TOOLKIT_VERSION=1.19.0-1 bash install-docker-nvidia-toolkit.sh
 #   RUN_DOCKER_HELLO_WORLD=0 RUN_GPU_TEST=0 bash install-docker-nvidia-toolkit.sh
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 DOCKER_GROUP_WRAPPER=0
 
 log() {
@@ -234,7 +235,7 @@ main() {
 
   log "Installing for user: ${USER}"
   log "Requesting sudo once up front. You may be prompted for your password."
-  sudo -v
+  bash "$SCRIPT_DIR/ensure-sudo.sh"
 
   install_docker_engine
   configure_docker_group

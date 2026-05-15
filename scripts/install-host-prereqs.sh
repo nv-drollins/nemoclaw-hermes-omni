@@ -8,6 +8,8 @@ if ! command -v apt-get >/dev/null 2>&1; then
     exit 1
 fi
 
+bash "$(dirname "$0")/ensure-sudo.sh"
+
 sudo apt-get update
 sudo apt-get install -y \
     ca-certificates \

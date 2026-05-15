@@ -43,6 +43,15 @@ used for this demo. On a clean Ubuntu host without Docker, run:
 bash scripts/install-docker-nvidia-toolkit.sh
 ```
 
+These setup helpers do **not** require passwordless sudo. They call
+`scripts/ensure-sudo.sh`, which prompts for your sudo password when needed.
+Run first-time setup from a terminal or SSH session with a TTY so the prompt can
+appear. For example:
+
+```bash
+ssh -t nvidia@<spark-ip>
+```
+
 Install NemoClaw/OpenShell:
 
 ```bash
@@ -84,20 +93,12 @@ START_WEB=false ./start.sh
 Onboard the Hermes sandbox against local vLLM:
 
 ```bash
-NEMOCLAW_EXPERIMENTAL=1 \
-NEMOCLAW_PROVIDER=vllm \
-NEMOCLAW_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning \
-NEMOCLAW_LOCAL_INFERENCE_TIMEOUT=600 \
-nemoclaw onboard \
-  --non-interactive \
-  --fresh \
-  --name my-hermes-local \
-  --agent hermes \
-  --no-gpu \
-  --no-sandbox-gpu \
-  --yes \
-  --yes-i-accept-third-party-software
+bash scripts/onboard-local-vllm.sh
 ```
+
+The onboarding wrapper warms up sudo first. This avoids a common fresh-install
+failure where NemoClaw's preflight needs to run a host-level port check and
+`sudo` cannot prompt from a non-interactive shell.
 
 Apply the demo skills, scripts, memory, and lookup policy:
 
