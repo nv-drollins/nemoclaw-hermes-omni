@@ -52,52 +52,22 @@ appear. For example:
 ssh -t nvidia@<spark-ip>
 ```
 
-Install NemoClaw/OpenShell:
+Download the local Omni model. If the model is gated, accept the model terms in
+your browser first, then provide `HF_TOKEN` for the download helper:
 
 ```bash
-curl -fsSL https://www.nvidia.com/nemoclaw.sh | \
-  bash -s -- --yes-i-accept-third-party-software
-```
-
-### NemoClaw version pinning
-
-Leave `NEMOCLAW_INSTALL_REF` unset for the current NemoClaw installer. To compare against a previous known demo lane, prefix the install command:
-
-```bash
-curl -fsSL https://www.nvidia.com/nemoclaw.sh | \
-  NEMOCLAW_INSTALL_REF=v0.0.38 bash -s -- --yes-i-accept-third-party-software
-```
-
-Check what is installed before debugging a sandbox issue:
-
-```bash
-nemoclaw --version
-openshell --version
-nemoclaw my-hermes-local status
-docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-```
-
-Make sure the new CLIs are on your path:
-
-```bash
-export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
-```
-
-Download the local Omni model:
-
-```bash
-bash scripts/download-model.sh
-```
-
-If Hugging Face asks for authentication, accept the model terms in your browser
-and export a token before running the download:
-
-```bash
+# either export it once for this terminal
 export HF_TOKEN="hf_..."
 bash scripts/download-model.sh
+
+# or pass it only to the download command
+HF_TOKEN="hf_..." bash scripts/download-model.sh
 ```
 
-The download helper creates its own Hugging Face CLI virtualenv at
+The token is needed for `scripts/download-model.sh`, not for `./start.sh`.
+If you store `HF_TOKEN` in `.bashrc`, place it above Ubuntu's early
+non-interactive `return` guard, or non-interactive deploy scripts will not see
+it. The download helper creates its own Hugging Face CLI virtualenv at
 `$HOME/.local/share/hf-download-venv`, so a clean box does not need a global
 `hf` command installed first. Override the target location with `MODEL_DIR=...`
 if needed.
@@ -106,6 +76,27 @@ Start only the local vLLM model server:
 
 ```bash
 START_WEB=false ./start.sh
+```
+
+Install NemoClaw/OpenShell against the local vLLM endpoint. This avoids the
+upstream installer's default non-interactive cloud-provider onboarding path,
+which can fail on a clean box with `NVIDIA_API_KEY is required` before the
+Hermes local-vLLM sandbox is configured.
+
+```bash
+curl -fsSL https://www.nvidia.com/nemoclaw.sh -o /tmp/nemoclaw.sh
+NEMOCLAW_EXPERIMENTAL=1 \
+NEMOCLAW_PROVIDER=vllm \
+NEMOCLAW_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning \
+NEMOCLAW_SANDBOX_NAME=my-hermes-local \
+NEMOCLAW_LOCAL_INFERENCE_TIMEOUT=600 \
+  bash /tmp/nemoclaw.sh --non-interactive --yes-i-accept-third-party-software --fresh
+```
+
+Make sure the new CLIs are on your path:
+
+```bash
+export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 ```
 
 Onboard the Hermes sandbox against local vLLM:
@@ -136,10 +127,19 @@ Open:
 http://<spark-ip>:8765
 ```
 
-For the Spark used during setup, that was:
+### NemoClaw version pinning
 
-```text
-http://192.168.1.164:8765
+Leave `NEMOCLAW_INSTALL_REF` unset for the current NemoClaw installer. To
+compare against a previous known demo lane, add it to the local-vLLM install
+command above, for example `NEMOCLAW_INSTALL_REF=v0.0.38`.
+
+Check what is installed before debugging a sandbox issue:
+
+```bash
+nemoclaw --version
+openshell --version
+nemoclaw my-hermes-local status
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 ```
 
 ## Stop

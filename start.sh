@@ -33,7 +33,7 @@ require_cmd() {
 wait_for_vllm() {
     echo "Waiting for local vLLM on port $VLLM_PORT..."
     for _ in $(seq 1 90); do
-        if curl -fsS "http://127.0.0.1:${VLLM_PORT}/v1/models" >/dev/null 2>&1; then
+        if curl -fsS "http://127.0.0.1:${VLLM_PORT}/v1/models" | grep -Fq "$MODEL_ID"; then
             echo "vLLM is ready: http://127.0.0.1:${VLLM_PORT}/v1"
             return 0
         fi
@@ -48,9 +48,18 @@ start_vllm() {
     require_cmd docker
     require_cmd curl
 
-    if curl -fsS "http://127.0.0.1:${VLLM_PORT}/v1/models" >/dev/null 2>&1; then
-        echo "vLLM is already running on port $VLLM_PORT"
-        return 0
+    if curl -fsS "http://127.0.0.1:${VLLM_PORT}/v1/models" >/tmp/hermes-omni-vllm-models.json 2>/dev/null; then
+        if grep -Fq "$MODEL_ID" /tmp/hermes-omni-vllm-models.json; then
+            echo "vLLM is already running on port $VLLM_PORT with $MODEL_ID"
+            return 0
+        fi
+        echo "Port $VLLM_PORT is serving a different vLLM/OpenAI-compatible model." >&2
+        echo "Expected: $MODEL_ID" >&2
+        echo "Current /v1/models response:" >&2
+        cat /tmp/hermes-omni-vllm-models.json >&2
+        echo >&2
+        echo "Stop the existing service or choose another VLLM_PORT before starting Hermes Omni." >&2
+        exit 1
     fi
 
     if [[ ! -f "$MODEL_DIR/config.json" ]]; then
